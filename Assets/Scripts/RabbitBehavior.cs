@@ -11,6 +11,9 @@ public class RabbitBehavior : MonoBehaviour {
 	float JumpTime = 0f;
 	public float MaxJumpTime = 2f; public float JumpSpeed = 2f;
 
+	public Dictionary<string, int> score;
+
+	public bool isBig;
 	Rigidbody2D body = null;
 	SpriteRenderer sr = null;
 	Animator animator = null;
@@ -20,6 +23,8 @@ public class RabbitBehavior : MonoBehaviour {
 		body = this.GetComponent<Rigidbody2D> ();
 		sr = this.GetComponent<SpriteRenderer>();
 		animator = GetComponent<Animator> ();
+		score = new Dictionary<string, int>();
+		isBig = false;
 		LevelController.current.setStartPosition (transform.position);
 	}
 	
@@ -78,5 +83,26 @@ public class RabbitBehavior : MonoBehaviour {
 		} else {
 			animator.SetBool ("IsJumping", true);
 		}
+	}
+
+	void OnTriggerEnter2D(Collider2D other) {
+		if (other.gameObject.CompareTag("Collectable")) {
+			Collectable item = other.gameObject.GetComponent<Collectable>();
+			item.SideEffect(this);
+			other.gameObject.SetActive(false);
+			other.gameObject.transform.position = new Vector2(-100, -100);
+		} else if (other.gameObject.CompareTag("Platform")) {
+			transform.parent = other.gameObject.GetComponent<Rigidbody2D>().transform;
+		}
+	}
+
+	void OnTriggerLeave2D(Collider2D other) {
+		if (other.gameObject.CompareTag("Platform")) {
+			transform.parent = LevelController.current.transform;
+		}
+	}
+
+	public void SetDeath(bool dead) {
+		animator.SetBool("IsDead", dead);
 	}
 }

@@ -15,7 +15,13 @@ public class LevelController : MonoBehaviour {
 		this.startingPosition = pos;
 	}
 
-	public void onRabbitDeath(RabbitBehavior rabbit) {
-	  rabbit.transform.position = this.startingPosition;
+	public void onRabbitDeath(RabbitBehavior rabbit, bool withAnim) {
+		rabbit.SetDeath(true);
+	  StartCoroutine(RabbitDeath(rabbit, withAnim));
+	}
+	IEnumerator RabbitDeath(RabbitBehavior rabbit, bool withAnim) {
+		yield return new WaitForSeconds(withAnim ? 3 : 0);
+		rabbit.transform.position = this.startingPosition;
+		rabbit.SetDeath(false);
 	}
 }
