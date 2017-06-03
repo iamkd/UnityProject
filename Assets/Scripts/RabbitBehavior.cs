@@ -13,10 +13,16 @@ public class RabbitBehavior : MonoBehaviour {
 
 	public Dictionary<string, int> score;
 
-	public bool isBig;
+	public bool isBig, isDead;
 	Rigidbody2D body = null;
 	SpriteRenderer sr = null;
 	Animator animator = null;
+	Transform heroParent = null;
+	public static RabbitBehavior lastRabbit = null;
+
+	void Awake() {
+		lastRabbit = this;
+	}
 
 	// Use this for initialization
 	void Start () {
@@ -25,15 +31,23 @@ public class RabbitBehavior : MonoBehaviour {
 		animator = GetComponent<Animator> ();
 		score = new Dictionary<string, int>();
 		isBig = false;
+		heroParent = this.transform.parent;
 		LevelController.current.setStartPosition (transform.position);
 	}
 	
 	// Update is called once per frame
 	void Update () {
 		float value = Input.GetAxis("Horizontal");
+		if (isDead) {
+			animator.SetFloat("AbsSpeed", 0);
+			return;
+		}
 		if (Mathf.Abs(value) > 0.0) {
 			Vector2 vel = body.velocity;
 			vel.x = value * speed;
+			if (isBig) {
+				vel.x *= 1.5f;
+			}
 			body.velocity = vel;
 		}
 
@@ -53,8 +67,13 @@ public class RabbitBehavior : MonoBehaviour {
 
 		if(hit) {
 			isGrounded = true;
+			if(hit.transform != null
+				&& hit.transform.GetComponent<MovingPlatform>() != null) {
+				SetNewParent(this.transform, hit.transform);
+			}
 		} else {
 			isGrounded = false;
+			SetNewParent(this.transform, this.heroParent);
 		}
 		Debug.DrawLine (from, to, Color.red);
 
@@ -77,7 +96,6 @@ public class RabbitBehavior : MonoBehaviour {
 			}
 		}
 
-		Animator animator = GetComponent<Animator> ();
 		if(this.isGrounded) {
 			animator.SetBool ("IsJumping", false);
 		} else {
@@ -89,20 +107,23 @@ public class RabbitBehavior : MonoBehaviour {
 		if (other.gameObject.CompareTag("Collectable")) {
 			Collectable item = other.gameObject.GetComponent<Collectable>();
 			item.SideEffect(this);
-			other.gameObject.SetActive(false);
-			other.gameObject.transform.position = new Vector2(-100, -100);
-		} else if (other.gameObject.CompareTag("Platform")) {
-			transform.parent = other.gameObject.GetComponent<Rigidbody2D>().transform;
-		}
-	}
-
-	void OnTriggerLeave2D(Collider2D other) {
-		if (other.gameObject.CompareTag("Platform")) {
-			transform.parent = LevelController.current.transform;
+			DestroyObject(other.gameObject);
 		}
 	}
 
 	public void SetDeath(bool dead) {
 		animator.SetBool("IsDead", dead);
+		isDead = dead;
+		if (!dead) {
+			animator.SetTrigger("Respawn");
+		}
+	}
+
+	static void SetNewParent(Transform obj, Transform new_parent) { 
+		if(obj.transform.parent != new_parent) {
+			Vector3 pos = obj.transform.position;
+			obj.transform.parent = new_parent;
+			obj.transform.position = pos; 
+		}
 	}
 }

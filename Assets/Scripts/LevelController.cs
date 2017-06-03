@@ -17,11 +17,11 @@ public class LevelController : MonoBehaviour {
 
 	public void onRabbitDeath(RabbitBehavior rabbit, bool withAnim) {
 		rabbit.SetDeath(true);
+		rabbit.transform.position = this.startingPosition;
+		rabbit.SetDeath(false);
 	  StartCoroutine(RabbitDeath(rabbit, withAnim));
 	}
 	IEnumerator RabbitDeath(RabbitBehavior rabbit, bool withAnim) {
-		yield return new WaitForSeconds(withAnim ? 3 : 0);
-		rabbit.transform.position = this.startingPosition;
-		rabbit.SetDeath(false);
+		yield return new WaitForSeconds(withAnim ? 2 : 0);
 	}
 }
